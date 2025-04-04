@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Viron</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #2c3e50;
+        }
+        canvas {
+            border: 3px solid #ecf0f1;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        #score {
+            color: white;
+            font-size: 24px;
+            font-family: Arial;
+        }
+    </style>
+</head>
+<body>
+    <div id="score">Score: 0</div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const GRID_SIZE = 20;
+        let score = 0;
+
+        // 蛇初始状态
+        let snake = [
+            { x: 200, y: 200 }
+        ];
+        let direction = 'right';
+        let food = generateFood();
+
+        // 生成随机食物
+        function generateFood() {
+            return {
+                x: Math.floor(Math.random() * (canvas.width/GRID_SIZE)) * GRID_SIZE,
+                y: Math.floor(Math.random() * (canvas.height/GRID_SIZE)) * GRID_SIZE
+            };
+        }
+
+        // 游戏主循环
+        function gameLoop() {
+            // 移动蛇头
+            const head = {...snake[0]};
+            switch(direction) {
+                case 'up': head.y -= GRID_SIZE; break;
+                case 'down': head.y += GRID_SIZE; break;
+                case 'left': head.x -= GRID_SIZE; break;
+                case 'right': head.x += GRID_SIZE; break;
+            }
+
+            // 碰撞检测
+            if (head.x < 0 || head.x >= canvas.width ||
+                head.y < 0 || head.y >= canvas.height ||
+                snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                alert('游戏结束！得分：' + score);
+                location.reload();
+                return;
+            }
+
+            snake.unshift(head);
+
+            // 吃食物逻辑
+            if (head.x === food.x && head.y === food.y) {
+                score += 10;
+                document.getElementById('score').textContent = `Score: ${score}`;
+                food = generateFood();
+            } else {
+                snake.pop();
+            }
+
+            // 清空画布
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制蛇
+            ctx.fillStyle = '#2ecc71';
+            snake.forEach(segment => {
+                ctx.fillRect(segment.x, segment.y, GRID_SIZE-1, GRID_SIZE-1);
+            });
+
+            // 绘制食物
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(food.x, food.y, GRID_SIZE-1, GRID_SIZE-1);
+        }
+
+        // 键盘控制
+        document.addEventListener('keydown', (e) => {
+            switch(e.key.toLowerCase()) {
+                case 'arrowup':
+                case 'w': if (direction !== 'down') direction = 'up'; break;
+                case 'arrowdown':
+                case 's': if (direction !== 'up') direction = 'down'; break;
+                case 'arrowleft':
+                case 'a': if (direction !== 'right') direction = 'left'; break;
+                case 'arrowright': 
+                case 'd': if (direction !== 'left') direction = 'right'; break;
+            }
+        });
+
+        // 启动游戏
+        setInterval(gameLoop, 150);
+    </script>
+</body>
+</html>
